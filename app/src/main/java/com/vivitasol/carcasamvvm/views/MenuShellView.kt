@@ -85,6 +85,18 @@ fun MenuShellView() {
                         scope.launch { drawerState.close() }
                     }
                 )
+
+                NavigationDrawerItem(
+                    label = { Text("2.5.1Inventario MVVM") },
+                    selected = currentInnerRoute(innerNavController) == Route.Inventario.route,
+                    onClick = {
+                        innerNavController.navigate(Route.Inventario.route) {
+                            popUpTo(Route.Option1.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        scope.launch { drawerState.close() }
+                    }
+                )
             }
         }
     ) {
@@ -123,6 +135,7 @@ fun MenuShellView() {
                 }
                 composable(Route.Option4.route) { Option4View() }
                 composable(Route.Option5.route) { Option5CameraView() }
+                composable(Route.Inventario.route) { InventarioView() }
             }
         }
     }

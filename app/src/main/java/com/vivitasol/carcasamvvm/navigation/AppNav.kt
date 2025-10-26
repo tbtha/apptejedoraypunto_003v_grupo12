@@ -13,6 +13,6 @@ sealed class Route(val route: String) {
     }
 
     data object Option4 : Route("option4")
-
     data object Option5 : Route("option5")
+    data object Inventario : Route("inventario")
 }
