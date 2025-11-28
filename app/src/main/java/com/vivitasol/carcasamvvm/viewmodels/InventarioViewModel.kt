@@ -15,6 +15,7 @@ import com.vivitasol.carcasamvvm.models.Inventario
 // Importar el servicio desde su nueva ubicación
 import com.vivitasol.carcasamvvm.services.InventarioService
 import com.vivitasol.carcasamvvm.services.InventarioServiceImpl
+import com.vivitasol.carcasamvvm.services.CurrencyConverter
 
 
 // --- 3. ViewModel (State Management y Lógica) ---
@@ -43,6 +44,13 @@ class InventarioViewModel(
     // Estado de error
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    
+    // Tasas de cambio del día (1 CLP = X USD/EUR)
+    private val _tasaUSD = MutableStateFlow<Double?>(null)
+    val tasaUSD: StateFlow<Double?> = _tasaUSD.asStateFlow()
+    
+    private val _tasaEUR = MutableStateFlow<Double?>(null)
+    val tasaEUR: StateFlow<Double?> = _tasaEUR.asStateFlow()
 
     // Filtros UI (usando Compose mutableStateOf para mayor reactividad en la UI)
     private var _categoriaFilter by mutableStateOf<Int?>(null) // null representa "Todas las categorías"
@@ -93,12 +101,39 @@ class InventarioViewModel(
                 _productos.value = productos
                 println("✅ InventarioViewModel: Productos cargados: ${productos.size}")
                 actualizarInventario()
+                obtenerTasasCambio()
             } catch (e: Exception) {
                 _errorMessage.value = "Error al cargar productos: ${e.message}"
                 println("❌ InventarioViewModel: Error cargando productos: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+    
+    private fun obtenerTasasCambio() {
+        viewModelScope.launch {
+            println("💱 Obteniendo tasas de cambio del día...")
+            
+            // Obtener tasa USD (1 CLP a USD)
+            val tasaUSD = CurrencyConverter.getTasaUSD()
+            if (tasaUSD != null) {
+                _tasaUSD.value = tasaUSD
+                println("✅ Tasa USD obtenida: 1 CLP = $${String.format("%.6f", tasaUSD)} USD")
+            } else {
+                println("❌ ERROR: No se pudo obtener la tasa USD")
+            }
+            
+            // Obtener tasa EUR (1 CLP a EUR)  
+            val tasaEUR = CurrencyConverter.getTasaEUR()
+            if (tasaEUR != null) {
+                _tasaEUR.value = tasaEUR
+                println("✅ Tasa EUR obtenida: 1 CLP = €${String.format("%.6f", tasaEUR)} EUR")
+            } else {
+                println("❌ ERROR: No se pudo obtener la tasa EUR")
+            }
+            
+            println("💱 Proceso de obtención de tasas completado")
         }
     }
 

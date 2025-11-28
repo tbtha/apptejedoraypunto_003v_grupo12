@@ -54,6 +54,8 @@ fun InventarioView(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val categoriaFilter by remember { derivedStateOf { viewModel.categoriaFilter } }
     val searchQuery by remember { derivedStateOf { viewModel.searchQuery } }
+    val tasaUSD by viewModel.tasaUSD.collectAsState()
+    val tasaEUR by viewModel.tasaEUR.collectAsState()
 
     // Estado para el diálogo de confirmación (reemplaza window.confirm)
     var dialogState by remember { mutableStateOf<Pair<Producto, Boolean>?>(null) }
@@ -101,6 +103,9 @@ fun InventarioView(
         ) {
             // Dashboard con métricas del inventario
             InventarioDashboard(inventario)
+            
+            // Mostrar tasas de cambio del día
+            TasasCambioCard(tasaUSD, tasaEUR)
 
             // Mostrar estado de carga o error
             if (isLoading) {
@@ -211,6 +216,92 @@ fun InventarioDashboard(inventario: Inventario) {
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------
+// Card con tasas de cambio del día
+// ---------------------------------------------------------------------
+
+@Composable
+fun TasasCambioCard(tasaUSD: Double?, tasaEUR: Double?) {
+    // DEBUG: Siempre mostrar algo para verificar
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (tasaUSD != null || tasaEUR != null) 
+                Color(0xFF1976D2).copy(alpha = 0.1f)
+            else 
+                Color(0xFFFF9800).copy(alpha = 0.1f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            // DEBUG: Mostrar estado
+            Text(
+                "DEBUG: tasaUSD=${tasaUSD} tasaEUR=${tasaEUR}",
+                fontSize = 10.sp,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold
+            )
+            
+            if (tasaUSD != null || tasaEUR != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "💱 Tasas del Día:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1565C0)
+                    )
+                    
+                    if (tasaUSD != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("💵", fontSize = 18.sp)
+                            Text(
+                                "1 CLP = $${String.format("%.6f", tasaUSD)} USD",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF2E7D32)
+                            )
+                        }
+                    }
+                    
+                    if (tasaEUR != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("💶", fontSize = 18.sp)
+                            Text(
+                                "1 CLP = €${String.format("%.6f", tasaEUR)} EUR",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF1565C0)
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    "⏳ Cargando tasas de cambio...",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF9800)
+                )
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
 }
 
 @Composable
@@ -337,7 +428,10 @@ fun FiltrosInventario(
 
 // Layout para pantallas grandes (Tabla)
 @Composable
-fun DesktopInventarioLayout(productos: List<Producto>, onActionClick: (Producto, Boolean) -> Unit) {
+fun DesktopInventarioLayout(
+    productos: List<Producto>, 
+    onActionClick: (Producto, Boolean) -> Unit
+) {
     // Cabecera de la tabla
     Row(
         Modifier
@@ -349,7 +443,7 @@ fun DesktopInventarioLayout(productos: List<Producto>, onActionClick: (Producto,
         TableHeaderCell("Id", 0.05f)
         TableHeaderCell("Imagen", 0.1f)
         TableHeaderCell("Nombre", 0.2f)
-        TableHeaderCell("Precio", 0.1f)
+        TableHeaderCell("Precio", 0.15f)
         TableHeaderCell("Stock", 0.1f)
         TableHeaderCell("Categoría", 0.15f)
         TableHeaderCell("Acciones", 0.3f)
@@ -375,7 +469,10 @@ fun RowScope.TableHeaderCell(text: String, weight: Float) {
 }
 
 @Composable
-fun DesktopInventarioRow(prod: Producto, onActionClick: (Producto, Boolean) -> Unit) {
+fun DesktopInventarioRow(
+    prod: Producto, 
+    onActionClick: (Producto, Boolean) -> Unit
+) {
     val rowColor = if (!prod.isActivo) Color.LightGray.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
 
     Row(
@@ -418,7 +515,9 @@ fun DesktopInventarioRow(prod: Producto, onActionClick: (Producto, Boolean) -> U
             Text(prod.descripcion, style = MaterialTheme.typography.bodySmall, maxLines = 1)
         }
 
-        Text("$${prod.precio}", modifier = Modifier.weight(0.1f), fontWeight = FontWeight.SemiBold)
+        Column(modifier = Modifier.weight(0.15f)) {
+            Text("CLP $${String.format("%.0f", prod.precio)}", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+        }
 
         Box(modifier = Modifier.weight(0.1f)) {
             if (prod.stock < 5) {
@@ -458,7 +557,10 @@ fun DesktopInventarioRow(prod: Producto, onActionClick: (Producto, Boolean) -> U
 
 // Layout para pantallas pequeñas (Tarjetas)
 @Composable
-fun MobileInventarioLayout(productos: List<Producto>, onActionClick: (Producto, Boolean) -> Unit) {
+fun MobileInventarioLayout(
+    productos: List<Producto>, 
+    onActionClick: (Producto, Boolean) -> Unit
+) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items(productos, key = { it.id }) { prod ->
             ProductInventarioCard(prod, onActionClick)
@@ -467,7 +569,10 @@ fun MobileInventarioLayout(productos: List<Producto>, onActionClick: (Producto, 
 }
 
 @Composable
-fun ProductInventarioCard(prod: Producto, onActionClick: (Producto, Boolean) -> Unit) {
+fun ProductInventarioCard(
+    prod: Producto, 
+    onActionClick: (Producto, Boolean) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -500,9 +605,17 @@ fun ProductInventarioCard(prod: Producto, onActionClick: (Producto, Boolean) -> 
             )
 
             Spacer(modifier = Modifier.height(12.dp))
+            
+            
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailColumn("ID", prod.id.toString(), Modifier.weight(1f))
-                DetailColumn("Precio", "$${prod.precio}", Modifier.weight(1f))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Precio", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Spacer(Modifier.height(2.dp))
+                    Text("CLP $${String.format("%.0f", prod.precio)}", 
+                        style = MaterialTheme.typography.bodyMedium, 
+                        fontWeight = FontWeight.SemiBold)
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
