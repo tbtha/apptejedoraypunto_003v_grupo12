@@ -1,10 +1,13 @@
 package com.vivitasol.carcasamvvm.views
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,7 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -241,12 +246,12 @@ fun TasasCambioCard(tasaUSD: Double?, tasaEUR: Double?) {
                 .padding(12.dp)
         ) {
             // DEBUG: Mostrar estado
-            Text(
-                "DEBUG: tasaUSD=${tasaUSD} tasaEUR=${tasaEUR}",
-                fontSize = 10.sp,
-                color = Color.Red,
-                fontWeight = FontWeight.Bold
-            )
+            // Text(
+            //     "DEBUG: tasaUSD=${tasaUSD} tasaEUR=${tasaEUR}",
+            //     fontSize = 10.sp,
+            //     color = Color.Red,
+            //     fontWeight = FontWeight.Bold
+            // )
             
             if (tasaUSD != null || tasaEUR != null) {
                 Row(
@@ -521,8 +526,35 @@ fun DesktopInventarioRow(
 
         Box(modifier = Modifier.weight(0.1f)) {
             if (prod.stock < 5) {
-                Badge(containerColor = Color(0xFFFFCC00), contentColor = Color.Black) {
-                    Text("${prod.stock} (Bajo)")
+                // Animación pulsante MÁS NOTORIA para stock bajo
+                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                val scale by infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 1.3f, // Más grande (antes 1.1)
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(600, easing = FastOutSlowInEasing), // Más rápido (antes 800ms)
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "scale"
+                )
+                val alpha by infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 0.6f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(600, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "alpha"
+                )
+                
+                Badge(
+                    containerColor = Color(0xFFFFCC00),
+                    contentColor = Color.Black,
+                    modifier = Modifier
+                        .scale(scale)
+                        .graphicsLayer { this.alpha = alpha }
+                ) {
+                    Text("${prod.stock} (Bajo)", fontWeight = FontWeight.Bold)
                 }
             } else {
                 Text(prod.stock.toString())
@@ -562,8 +594,33 @@ fun MobileInventarioLayout(
     onActionClick: (Producto, Boolean) -> Unit
 ) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(productos, key = { it.id }) { prod ->
-            ProductInventarioCard(prod, onActionClick)
+        itemsIndexed(productos, key = { _, prod -> prod.id }) { index, prod ->
+            // Animación de fade-in MÁS NOTORIA para cada tarjeta
+            var visible by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(index * 100L) // Más delay (antes 50ms)
+                visible = true
+            }
+            
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(animationSpec = tween(600)) + // Más lento (antes 400ms)
+                        slideInVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ) { it / 2 } + // Desliza desde más arriba (antes it/4)
+                        scaleIn(
+                            initialScale = 0.8f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+            ) {
+                ProductInventarioCard(prod, onActionClick)
+            }
         }
     }
 }
@@ -653,8 +710,35 @@ fun DetailColumn(label: String, value: String, modifier: Modifier, isLow: Boolea
         Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
         Spacer(Modifier.height(2.dp))
         if (isLow) {
-            Badge(containerColor = Color(0xFFFFCC00), contentColor = Color.Black) {
-                Text("$value (Bajo)")
+            // Animación pulsante MÁS NOTORIA para stock bajo
+            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+            val scale by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.3f, // Más grande (antes 1.1)
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600, easing = FastOutSlowInEasing), // Más rápido (antes 800ms)
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "scale"
+            )
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 0.6f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "alpha"
+            )
+            
+            Badge(
+                containerColor = Color(0xFFFFCC00),
+                contentColor = Color.Black,
+                modifier = Modifier
+                    .scale(scale)
+                    .graphicsLayer { this.alpha = alpha }
+            ) {
+                Text("$value (Bajo)", fontWeight = FontWeight.Bold)
             }
         } else {
             Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)

@@ -10,7 +10,7 @@ Este proyecto incluye **pruebas unitarias** que cubren más del **80% del códig
 - ✅ `ProductoTest.kt` - 5 pruebas
 - ✅ `CategoriaTest.kt` - 3 pruebas
 - ✅ `InventarioTest.kt` - 4 pruebas
-- ✅ `FrankfurterResponseTest.kt` - 3 pruebas
+- ✅ `CambistaResponseTest.kt` - 3 pruebas (API de tasas de cambio)
 
 #### 2. **ViewModels (Lógica de Negocio)**
 - ✅ `InventarioViewModelTest.kt` - 4 pruebas + Mock Service
@@ -72,10 +72,10 @@ Este proyecto incluye **pruebas unitarias** que cubren más del **80% del códig
 - ✅ Suma de activos + inactivos = total
 - ✅ Stock bajo no mayor que total
 
-### **FrankfurterResponseTest** (API de Monedas)
-- ✅ Creación de respuesta con tasas
-- ✅ Obtener tasa USD del mapa
-- ✅ Múltiples monedas en rates
+### **CambistaResponseTest** (API de Tasas de Cambio - Cambista.cl)
+- ✅ Creación de respuesta con tasas USD y EUR
+- ✅ Obtener tasa USD del mapa rates
+- ✅ Múltiples monedas en rates (USD, EUR, GBP)
 
 ### **InventarioViewModelTest** (Lógica de Inventario)
 - ✅ Filtro por categoría
@@ -105,7 +105,7 @@ Las pruebas cubren:
 - Producto
 - Categoria
 - Inventario
-- FrankfurterResponse
+- CambistaResponse (API de tasas de cambio)
 
 ### ✅ **ViewModels (>80%)**
 - InventarioViewModel

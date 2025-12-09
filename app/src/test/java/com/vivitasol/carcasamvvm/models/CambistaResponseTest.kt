@@ -1,13 +1,15 @@
 package com.vivitasol.carcasamvvm.models
 
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 
 /**
- * Pruebas unitarias para los modelos de API de monedas
- * Ahora usando Cambista.cl API
+ * Pruebas unitarias para los modelos de API Cambista.cl
+ * API chilena de tasas de cambio
  */
-class FrankfurterResponseTest {
+class CambistaResponseTest {
 
     @Test
     fun `crear respuesta Cambista con tasas USD y EUR`() {

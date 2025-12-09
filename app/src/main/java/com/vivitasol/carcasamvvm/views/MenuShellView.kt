@@ -1,16 +1,26 @@
 package com.vivitasol.carcasamvvm.views
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import kotlinx.coroutines.launch
 import com.vivitasol.carcasamvvm.navigation.Route
+import com.vivitasol.carcasamvvm.viewmodels.ThemeViewModel
 import com.vivitasol.carcasamvvm.views.ProductoFormView
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,6 +29,8 @@ fun MenuShellView() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val innerNavController = rememberNavController()
+    val themeViewModel: ThemeViewModel = viewModel()
+    val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -29,6 +41,48 @@ fun MenuShellView() {
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
+                
+                // Switch para cambiar tema
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Tema oscuro", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Animación de escala y rotación al cambiar tema
+                    var isAnimating by remember { mutableStateOf(false) }
+                    val scale by animateFloatAsState(
+                        targetValue = if (isAnimating) 1.2f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        finishedListener = { isAnimating = false },
+                        label = "scale"
+                    )
+                    val rotation by animateFloatAsState(
+                        targetValue = if (isAnimating) 360f else 0f,
+                        animationSpec = tween(400),
+                        label = "rotation"
+                    )
+                    
+                    Switch(
+                        checked = isDarkTheme,
+                        onCheckedChange = { 
+                            isAnimating = true
+                            themeViewModel.toggleTheme()
+                        },
+                        modifier = Modifier
+                            .scale(scale)
+                            .graphicsLayer { rotationZ = rotation }
+                    )
+                }
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                
 //                NavigationDrawerItem(
 //                    label = { Text("2.1.3Componentes") },
 //                    selected = currentInnerRoute(innerNavController) == Route.Option1.route,
